@@ -1,0 +1,11 @@
+env: "local"
+
+database:
+  host: localhost
+  port: 5432
+  dbname: roleclub
+  username: postgres
+  sslmode: disable
+
+http_server:
+  port: "8080"
