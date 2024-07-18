@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "roleclub-website.auth.v1";
+
+service Auth {
+    rpc CreateUser (CreateUserRequest) returns (CreateUserResponse);
+    rpc Login (LoginRequest) returns (LoginResponse);
+}
+
+message CreateUserRequest {
+    string firstName = 1;
+    string lastName = 2;
+    string fatherName = 3;
+    string telNumber = 4;
+    string password = 5;
+    bool isHSEStudent = 6;
+}
+
+message CreateUserResponse {
+    string ok = 1;
+}
+
+message LoginRequest {
+    string telNumber = 1;
+    string password = 2;
+}
+
+message LoginResponse {
+    string token = 1;
+}
+
+enum UserRole {
+    USER_ROLE_UNKNOWN = 0;
+    USER_ROLE_PLAYER = 1;
+    USER_ROLE_MASTER = 2;
+    USER_ROLE_ADMIN = 3;
+}

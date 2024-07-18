@@ -49,12 +49,12 @@ func (auth *AuthRepository) CreateUser(user *models.User) error {
 	return nil
 }
 
-func (auth *AuthRepository) GetUser(telNumber, password string) (*models.User, error) {
+func (auth *AuthRepository) GetUser(telNumber string) (*models.User, error) {
 	const fn = "repository.postgres.auth.GetUser"
 
 	stmt, err := auth.db.Prepare(fmt.Sprintf(
 		`SELECT * FROM  %s
-		WHERE tel_number=$1 AND password_hash=$2`,
+		WHERE tel_number=$1`,
 		usersTable,
 	))
 	if err != nil {
@@ -63,7 +63,7 @@ func (auth *AuthRepository) GetUser(telNumber, password string) (*models.User, e
 	defer stmt.Close()
 
 	usr := &models.User{}
-	err = stmt.QueryRow(telNumber, password).Scan(
+	err = stmt.QueryRow(telNumber).Scan(
 		&usr.ID,
 		&usr.FirstName,
 		&usr.LastName,
@@ -74,7 +74,7 @@ func (auth *AuthRepository) GetUser(telNumber, password string) (*models.User, e
 		&usr.IsBanned,
 		&usr.PlayedGames,
 		&usr.ConductedGames,
-		&usr.Status,
+		&usr.Role,
 	)
 
 	if err != nil {
@@ -110,7 +110,7 @@ func (auth *AuthRepository) GetUserByUUID(uuid uuid.UUID) (*models.User, error) 
 		&usr.IsBanned,
 		&usr.PlayedGames,
 		&usr.ConductedGames,
-		&usr.Status,
+		&usr.Role,
 	)
 
 	if err != nil {

@@ -13,5 +13,5 @@ type User struct {
 	IsBanned       bool      `json:"is_banned"`
 	PlayedGames    int       `json:"played_games"`
 	ConductedGames int       `json:"conducted_games"`
-	Status         string    `json:"status"`
+	Role           string    `json:"status"`
 }

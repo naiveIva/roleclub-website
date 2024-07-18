@@ -1,11 +1,20 @@
 package main
 
 import (
-	"flag"
 	"auth/internal/config"
 	"auth/internal/logger"
 	"auth/internal/repository/postgres"
+	grpcserver "auth/internal/server"
+	"auth/internal/service"
 	"auth/models"
+	"flag"
+	"net"
+	"os"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+
+	api "auth/api/gen"
 )
 
 var (
@@ -30,6 +39,31 @@ func main() {
 
 	repo := postgres.NewRepository(db)
 
+	service := service.NewService(repo)
+
+	// CreateUsers(service)
+
+	AuthServer := grpcserver.NewGRPCServer(service)
+
+	GrpcServer := grpc.NewServer()
+
+	api.RegisterAuthServer(GrpcServer, AuthServer)
+
+	reflection.Register(GrpcServer)
+
+	l, err := net.Listen("tcp", "localhost:8082")
+	if err != nil {
+		log.Error("failed to create listener: %v", err)
+		os.Exit(1)
+	}
+
+	err = GrpcServer.Serve(l)
+	if err != nil {
+		log.Error("error while serving: %v", err)
+	}
+}
+
+func CreateUsers(service *service.Service) {
 	users := []models.User{
 		{
 			FirstName:    "Иоанна",
@@ -58,15 +92,6 @@ func main() {
 	}
 
 	for _, user := range users {
-		err = repo.CreateUser(&user)
-		if err != nil {
-			log.Error(err.Error())
-		}
+		_ = service.CreateUser(&user)
 	}
-
-	// TODO: init storage
-
-	// TODO: init router
-
-	// TODO: run server
 }
