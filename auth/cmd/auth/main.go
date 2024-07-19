@@ -10,8 +10,11 @@ import (
 	"auth/pkg/logger"
 	"context"
 	"flag"
+	"log/slog"
 	"net"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -59,11 +62,23 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Info("running server", "address", cfg.Server.Address)
-	err = grpcServer.Serve(l)
-	if err != nil {
-		log.Error("error while serving: %v", logger.Error(err))
-	}
+	go func() {
+		log.Info("running server", "address", cfg.Server.Address)
+		err = grpcServer.Serve(l)
+		if err != nil {
+			log.Error("error while serving: %v", logger.Error(err))
+			panic(err)
+		}
+	}()
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
+
+	sign := <-stop
+
+	log.Info("stopping server gracefully", slog.String("signal", sign.String()))
+	grpcServer.GracefulStop()
+	log.Info("application stopped")
 }
 
 func CreateUsers(service *service.Service) {
