@@ -1,8 +1,8 @@
-package postgres
+package database
 
 import (
-	"fmt"
 	"auth/internal/config"
+	"fmt"
 
 	"database/sql"
 
@@ -10,11 +10,11 @@ import (
 )
 
 const (
-	usersTable = "players"
+	UsersTable = "players"
 
-	playerStatus = "player"
-	masterStatus = "master"
-	adminStatus  = "admin"
+	PlayerStatus = "player"
+	MasterStatus = "master"
+	AdminStatus  = "admin"
 )
 
 func NewPostgresDB(cfg *config.Config) (*sql.DB, error) {

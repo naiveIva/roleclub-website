@@ -1,11 +1,13 @@
 package postgres
 
 import (
+	"auth/internal/repository"
+	"auth/models"
 	"database/sql"
 	"errors"
 	"fmt"
-	"auth/internal/repository"
-	"auth/models"
+
+	"auth/pkg/database"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgerrcode"
@@ -30,7 +32,7 @@ func (auth *AuthRepository) CreateUser(user *models.User) error {
 			(uuid, first_name, last_name, father_name,
 			tel_number, password_hash, is_hse_student)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-		usersTable,
+		database.UsersTable,
 	))
 	if err != nil {
 		return fmt.Errorf("%s: %v", fn, err)
@@ -55,7 +57,7 @@ func (auth *AuthRepository) GetUser(telNumber string) (*models.User, error) {
 	stmt, err := auth.db.Prepare(fmt.Sprintf(
 		`SELECT * FROM  %s
 		WHERE tel_number=$1`,
-		usersTable,
+		database.UsersTable,
 	))
 	if err != nil {
 		return nil, fmt.Errorf("%s: %v", fn, err)
@@ -91,7 +93,7 @@ func (auth *AuthRepository) GetUserByUUID(uuid uuid.UUID) (*models.User, error) 
 
 	stmt, err := auth.db.Prepare(fmt.Sprintf(
 		`SELECT * FROM  %s WHERE uuid = $1`,
-		usersTable,
+		database.UsersTable,
 	))
 	if err != nil {
 		return nil, fmt.Errorf("%s: %v", fn, err)
@@ -128,7 +130,7 @@ func (auth *AuthRepository) IncrementPlayedGames(uuid uuid.UUID) error {
 	stmt, err := auth.db.Prepare(fmt.Sprintf(
 		`UPDATE %s SET played_games = played_games + 1 
 		WHERE uuid=$1`,
-		usersTable,
+		database.UsersTable,
 	))
 	if err != nil {
 		return fmt.Errorf("%s: %v", fn, err)
@@ -149,7 +151,7 @@ func (auth *AuthRepository) SetPlayedGames(numOfGames int, playerID int) error {
 	stmt, err := auth.db.Prepare(fmt.Sprintf(
 		`UPDATE %s SET played_games=$1
 		WHERE id=$2`,
-		usersTable,
+		database.UsersTable,
 	))
 	if err != nil {
 		return fmt.Errorf("%s: %v", fn, err)
@@ -170,7 +172,7 @@ func (auth *AuthRepository) IncrementConductedGames(playerID int) error {
 	stmt, err := auth.db.Prepare(fmt.Sprintf(
 		`UPDATE %s SET conducted_games = conducted_games + 1
 		WHERE id=$1`,
-		usersTable,
+		database.UsersTable,
 	))
 	if err != nil {
 		return fmt.Errorf("%s: %v", fn, err)
@@ -191,7 +193,7 @@ func (auth *AuthRepository) SetConductedGames(numOfGames int, playerID int) erro
 	stmt, err := auth.db.Prepare(fmt.Sprintf(
 		`UPDATE %s SET conducted_games = $1
 		WHERE id=$2`,
-		usersTable,
+		database.UsersTable,
 	))
 	if err != nil {
 		return fmt.Errorf("%s: %v", fn, err)
@@ -209,14 +211,16 @@ func (auth *AuthRepository) SetConductedGames(numOfGames int, playerID int) erro
 func (auth *AuthRepository) SetStatus(status string, playerID int) error {
 	const fn = "repository.postgres.auth.SetStatus"
 
-	if status != playerStatus && status != masterStatus && status != adminStatus {
+	if status != database.PlayerStatus &&
+		status != database.MasterStatus &&
+		status != database.AdminStatus {
 		return fmt.Errorf("%s: %v", fn, repository.ErrInvalidPlayerStatus)
 	}
 
 	stmt, err := auth.db.Prepare(fmt.Sprintf(
 		`UPDATE %s SET status = $1
 		WHERE id=$2`,
-		usersTable,
+		database.UsersTable,
 	))
 	if err != nil {
 		return fmt.Errorf("%s: %v", fn, err)

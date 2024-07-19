@@ -9,9 +9,9 @@ import (
 )
 
 type Config struct {
-	Env        string     `yaml:"env" env-default:"local"`
-	Database   Database   `yaml:"database"`
-	HTTPServer HTTPServer `yaml:"http_server"`
+	Env      string   `yaml:"env" env-default:"local"`
+	Database Database `yaml:"database"`
+	Server   Server   `yaml:"server"`
 }
 
 type Database struct {
@@ -23,7 +23,7 @@ type Database struct {
 	SSLMode  string `yaml:"sslmode" env-default:"disabled"`
 }
 
-type HTTPServer struct {
+type Server struct {
 	Address string `yaml:"address" env-default:"localhost:8082"`
 }
 

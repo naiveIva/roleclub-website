@@ -2,11 +2,13 @@ package main
 
 import (
 	"auth/internal/config"
-	"auth/internal/logger"
 	"auth/internal/repository/postgres"
-	grpcserver "auth/internal/server"
+	grpcServer "auth/internal/server"
 	"auth/internal/service"
 	"auth/models"
+	"auth/pkg/database"
+	"auth/pkg/logger"
+	"context"
 	"flag"
 	"net"
 	"os"
@@ -32,34 +34,35 @@ func main() {
 
 	log := logger.Init()
 
-	db, err := postgres.NewPostgresDB(cfg)
+	db, err := database.NewPostgresDB(cfg)
 	if err != nil {
-		log.Error("failed to open sql connection: %v", err)
+		log.Error("failed to open sql connection: %v", logger.Error(err))
 	}
 
 	repo := postgres.NewRepository(db)
 
-	service := service.NewService(repo)
+	service := service.NewService(log, repo)
 
 	// CreateUsers(service)
 
-	AuthServer := grpcserver.NewGRPCServer(service)
+	authServer := grpcServer.NewGRPCServer(service)
 
-	GrpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer()
 
-	api.RegisterAuthServer(GrpcServer, AuthServer)
+	api.RegisterAuthServer(grpcServer, authServer)
 
-	reflection.Register(GrpcServer)
+	reflection.Register(grpcServer)
 
-	l, err := net.Listen("tcp", "localhost:8082")
+	l, err := net.Listen("tcp", cfg.Server.Address)
 	if err != nil {
-		log.Error("failed to create listener: %v", err)
+		log.Error("failed to create listener: %v", logger.Error(err))
 		os.Exit(1)
 	}
 
-	err = GrpcServer.Serve(l)
+	log.Info("running server", "address", cfg.Server.Address)
+	err = grpcServer.Serve(l)
 	if err != nil {
-		log.Error("error while serving: %v", err)
+		log.Error("error while serving: %v", logger.Error(err))
 	}
 }
 
@@ -92,6 +95,6 @@ func CreateUsers(service *service.Service) {
 	}
 
 	for _, user := range users {
-		_ = service.CreateUser(&user)
+		_ = service.RegisterUser(context.TODO(), &user)
 	}
 }

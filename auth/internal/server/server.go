@@ -45,8 +45,8 @@ func (s *GRPCServer) CreateUser(ctx context.Context, req *api.CreateUserRequest)
 		return nil, status.Error(codes.InvalidArgument, "password is required")
 	}
 
-	err := s.service.CreateUser(
-		&models.User{
+	err := s.service.RegisterUser(
+		ctx, &models.User{
 			FirstName:    req.GetFirstName(),
 			LastName:     req.GetLastName(),
 			FatherName:   req.GetFatherName(),
@@ -73,7 +73,7 @@ func (s *GRPCServer) Login(ctx context.Context, req *api.LoginRequest) (*api.Log
 		return nil, status.Error(codes.InvalidArgument, "password is required")
 	}
 
-	usr, err := s.service.Login(req.GetTelNumber(), req.GetPassword())
+	usr, err := s.service.Login(ctx, req.GetTelNumber(), req.GetPassword())
 	if err != nil {
 		if errors.Is(err, service.ErrUserNotFound) {
 			return nil, status.Error(codes.NotFound, "user not found")
