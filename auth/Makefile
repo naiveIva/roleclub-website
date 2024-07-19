@@ -1,3 +1,9 @@
+MAIN=cmd/auth/main.go
+
+.PHONY: run
+run: 
+	go run $(MAIN)
+
 .PHONY: protos
 protos:
 	protoc -I api/protos/ api/protos/auth.proto 

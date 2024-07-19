@@ -73,7 +73,7 @@ func (s *GRPCServer) Login(ctx context.Context, req *api.LoginRequest) (*api.Log
 		return nil, status.Error(codes.InvalidArgument, "password is required")
 	}
 
-	usr, err := s.service.Login(ctx, req.GetTelNumber(), req.GetPassword())
+	token, err := s.service.Login(ctx, req.GetTelNumber(), req.GetPassword())
 	if err != nil {
 		if errors.Is(err, service.ErrUserNotFound) {
 			return nil, status.Error(codes.NotFound, "user not found")
@@ -83,6 +83,6 @@ func (s *GRPCServer) Login(ctx context.Context, req *api.LoginRequest) (*api.Log
 		}
 		return nil, err
 	}
-	str := fmt.Sprintf("user found: %s", usr.FirstName)
+	str := fmt.Sprintf("jwt token: %s", token)
 	return &api.LoginResponse{Token: str}, nil
 }

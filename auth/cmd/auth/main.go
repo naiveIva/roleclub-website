@@ -41,7 +41,7 @@ func main() {
 
 	repo := postgres.NewRepository(db)
 
-	service := service.NewService(log, repo)
+	service := service.NewService(log, cfg, repo)
 
 	// CreateUsers(service)
 

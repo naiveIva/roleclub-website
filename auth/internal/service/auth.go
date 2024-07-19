@@ -1,6 +1,7 @@
 package service
 
 import (
+	"auth/internal/config"
 	"auth/internal/repository"
 	"auth/models"
 	"auth/pkg/logger"
@@ -8,19 +9,23 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthorizationService struct {
 	log        *slog.Logger
+	cfg        *config.Config
 	repository *repository.Repository
 }
 
-func NewAuthorizationService(log *slog.Logger, rep *repository.Repository) *AuthorizationService {
+func NewAuthorizationService(log *slog.Logger, cfg *config.Config, rep *repository.Repository) *AuthorizationService {
 	return &AuthorizationService{
+		log:        log,
+		cfg:        cfg,
 		repository: rep,
-		log: log,
 	}
 }
 
@@ -66,7 +71,7 @@ func CheckPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
-func (auth *AuthorizationService) Login(ctx context.Context, telNumber, password string) (*models.User, error) {
+func (auth *AuthorizationService) Login(ctx context.Context, telNumber, password string) (string, error) {
 	const fn = "service.auth.Login"
 
 	log := auth.log.With(
@@ -80,20 +85,56 @@ func (auth *AuthorizationService) Login(ctx context.Context, telNumber, password
 	if err != nil {
 		log.Error("failed to find user", logger.Error(err))
 		if errors.Is(err, repository.ErrUserNotFound) {
-			return nil, fmt.Errorf("%s: %w", fn, err)
+			return "", fmt.Errorf("%s: %w", fn, err)
 		}
-		return nil, err
+		return "", err
 	}
 
 	if !CheckPasswordHash(password, usr.Password) {
 		err = ErrorWrongPassword
 		log.Error("password verification failed", logger.Error(err))
-		return nil, fmt.Errorf("%s: %w", fn, err)
+		return "", fmt.Errorf("%s: %w", fn, err)
 	}
 
 	log.Info("user logged in successfully")
 
-	// todo: create jwt token
+	token, err := NewToken(usr, auth.cfg.Jwt.TokenTTL, auth.cfg.Jwt.JwtKey)
+	if err != nil {
+		log.Error("failed to generate jwt token", logger.Error(err))
+		return "", fmt.Errorf("%s: %w", fn, err)
+	}
+	log.Info("jwt token created successfully")
 
-	return usr, nil
+	return token, nil
+}
+
+func NewToken(user *models.User, duration time.Duration, key string) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
+		jwt.MapClaims{
+			"sub": user.ID,
+			"exp": time.Now().Add(duration).Unix(),
+		})
+
+	tokenString, err := token.SignedString([]byte(key))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
+}
+
+func VerifyToken(tokenString string, key string) (*jwt.Token, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return key, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, fmt.Errorf("invalid token")
+	}
+
+	return token, nil
 }

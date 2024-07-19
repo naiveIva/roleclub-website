@@ -3,6 +3,7 @@ package config
 import (
 	"log"
 	"os"
+	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/joho/godotenv"
@@ -12,6 +13,7 @@ type Config struct {
 	Env      string   `yaml:"env" env-default:"local"`
 	Database Database `yaml:"database"`
 	Server   Server   `yaml:"server"`
+	Jwt      JWT      `yaml:"jwt"`
 }
 
 type Database struct {
@@ -25,6 +27,11 @@ type Database struct {
 
 type Server struct {
 	Address string `yaml:"address" env-default:"localhost:8082"`
+}
+
+type JWT struct {
+	JwtKey   string        `env:"JWT_KEY"`
+	TokenTTL time.Duration `yaml:"token_ttl" env-default:"1h"`
 }
 
 func MustInit(cfg_name string) *Config {
