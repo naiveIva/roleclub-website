@@ -26,7 +26,7 @@ type Database struct {
 }
 
 type Server struct {
-	Address string `yaml:"address" env-default:"localhost:8082"`
+	Port string `yaml:"port" env-default:"localhost:8082"`
 }
 
 type JWT struct {

@@ -10,6 +10,7 @@ import (
 	"auth/pkg/logger"
 	"context"
 	"flag"
+	"fmt"
 	"log/slog"
 	"net"
 	"os"
@@ -56,14 +57,14 @@ func main() {
 
 	reflection.Register(grpcServer)
 
-	l, err := net.Listen("tcp", cfg.Server.Address)
+	l, err := net.Listen("tcp", fmt.Sprintf("localhost:%s", cfg.Server.Port))
 	if err != nil {
 		log.Error("failed to create listener: %v", logger.Error(err))
 		os.Exit(1)
 	}
 
 	go func() {
-		log.Info("running server", "address", cfg.Server.Address)
+		log.Info("running server", "address", fmt.Sprintf("localhost:%s", cfg.Server.Port))
 		err = grpcServer.Serve(l)
 		if err != nil {
 			log.Error("error while serving: %v", logger.Error(err))
