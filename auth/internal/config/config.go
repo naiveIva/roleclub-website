@@ -19,14 +19,15 @@ type Config struct {
 type Database struct {
 	Host     string `yaml:"host" env-default:"localhost"`
 	Port     string `yaml:"port" env-default:"5432"`
-	DBName   string `yaml:"dbname"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password" env:"DB_PASSWORD"`
 	SSLMode  string `yaml:"sslmode" env-default:"disabled"`
+	DBName   string `yaml:"dbname" env:"POSTGRES_DB"`
+	Username string `yaml:"username" env:"POSTGRES_USER"`
+	Password string `yaml:"password" env:"POSTGRES_PASSWORD"`
 }
 
 type Server struct {
-	Port string `yaml:"port" env-default:"localhost:8082"`
+	Host string `yaml:"host" env-default:"localhost"`
+	Port string `yaml:"port" env-default:"8081"`
 }
 
 type JWT struct {
@@ -40,11 +41,12 @@ func MustInit(cfg_name string) *Config {
 		log.Fatal("cannot read config")
 	}
 
-	// getting password from .env
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("error loading .env file")
 	}
-	cfg.Database.Password = os.Getenv("DB_PASSWORD")
+	cfg.Database.DBName = os.Getenv("POSTGRES_DB")
+	cfg.Database.Username = os.Getenv("POSTGRES_USER")
+	cfg.Database.Password = os.Getenv("POSTGRES_PASSWORD")
 	return &cfg
 }

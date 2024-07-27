@@ -18,7 +18,7 @@ const (
 )
 
 func NewPostgresDB(cfg *config.Config) (*sql.DB, error) {
-	const fn = "storage.postgres.NewPostgresDB"
+	const fn = "pkg.database.NewPostgresDB"
 
 	db, err := sql.Open("postgres", fmt.Sprintf(
 		"host=%s port=%s dbname=%s user=%s password=%s sslmode=%s",

@@ -57,7 +57,7 @@ func main() {
 
 	reflection.Register(grpcServer)
 
-	l, err := net.Listen("tcp", fmt.Sprintf("localhost:%s", cfg.Server.Port))
+	l, err := net.Listen("tcp", fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port))
 	if err != nil {
 		log.Error("failed to create listener: %v", logger.Error(err))
 		os.Exit(1)
