@@ -47,8 +47,6 @@ func main() {
 
 	service := service.NewService(log, cfg, repo)
 
-	// CreateUsers(service)
-
 	authServer := grpcServer.NewGRPCServer(service)
 
 	grpcServer := grpc.NewServer()
@@ -80,37 +78,4 @@ func main() {
 	log.Info("stopping server gracefully", slog.String("signal", sign.String()))
 	grpcServer.GracefulStop()
 	log.Info("application stopped")
-}
-
-func CreateUsers(service *service.Service) {
-	users := []models.User{
-		{
-			FirstName:    "Иоанна",
-			LastName:     "Мысниченко",
-			FatherName:   "Николаевна",
-			TelNumber:    "12345",
-			Password:     "qwerty",
-			IsHSEStudent: false,
-		},
-		{
-			FirstName:    "Ангелина",
-			LastName:     "Никитич",
-			FatherName:   "Батьковна",
-			TelNumber:    "67890",
-			Password:     "ффффффф",
-			IsHSEStudent: true,
-		},
-		{
-			FirstName:    "Ксения",
-			LastName:     "Борщева",
-			FatherName:   "Батьковна",
-			TelNumber:    "000",
-			Password:     "fffjjjjfjfjf",
-			IsHSEStudent: false,
-		},
-	}
-
-	for _, user := range users {
-		_ = service.RegisterUser(context.TODO(), &user)
-	}
 }
