@@ -37,9 +37,10 @@ func (auth *AuthRepository) CreateUser(user *models.User) error {
 	if err != nil {
 		return fmt.Errorf("%s: %v", fn, err)
 	}
+	defer stmt.Close()
 
 	_, err = stmt.Exec(
-		NewUUID(), user.FirstName, user.LastName, user.FatherName,
+		uuid.New(), user.FirstName, user.LastName, user.FatherName,
 		user.TelNumber, user.Password, user.IsHSEStudent)
 	if err != nil {
 		if pgErr, ok := err.(*pq.Error); ok && pgErr.Code == pgerrcode.UniqueViolation {
@@ -233,8 +234,4 @@ func (auth *AuthRepository) SetStatus(status string, playerID int) error {
 	}
 
 	return nil
-}
-
-func NewUUID() uuid.UUID {
-	return uuid.New()
 }
