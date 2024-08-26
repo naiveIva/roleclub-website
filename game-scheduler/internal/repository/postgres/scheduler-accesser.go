@@ -9,17 +9,17 @@ import (
 	"time"
 )
 
-type ScheduleAccesser struct {
+type ScheduleAccesserRepository struct {
 	db *sql.DB
 }
 
-func NewScheduleAccesser(db *sql.DB) *ScheduleAccesser {
-	return &ScheduleAccesser{
+func NewScheduleAccesserRepository(db *sql.DB) *ScheduleAccesserRepository {
+	return &ScheduleAccesserRepository{
 		db: db,
 	}
 }
 
-func (sa *ScheduleAccesser) GetSchedule(ctx context.Context, from time.Time, to time.Time) ([]*models.Event, error) {
+func (sa *ScheduleAccesserRepository) GetSchedule(ctx context.Context, from time.Time, to time.Time) ([]*models.Event, error) {
 	const fn = "repository.postgres.schedule-accesser.GetSchedule"
 
 	schedule := make([]*models.Event, 0)
@@ -35,7 +35,7 @@ func (sa *ScheduleAccesser) GetSchedule(ctx context.Context, from time.Time, to 
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", fn, err)
+		return nil, fmt.Errorf("%s: %w", fn, err)
 	}
 	defer rows.Close()
 
@@ -50,15 +50,14 @@ func (sa *ScheduleAccesser) GetSchedule(ctx context.Context, from time.Time, to 
 		)
 
 		if err != nil {
-			return nil, fmt.Errorf("%s: %v", fn, err)
+			return nil, fmt.Errorf("%s: %w", fn, err)
 		}
 		schedule = append(schedule, event)
-		
 	}
 
 	err = rows.Err()
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", fn, err)
+		return nil, fmt.Errorf("%s: %w", fn, err)
 	}
 
 	return schedule, nil

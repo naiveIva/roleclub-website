@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"roleclub-website/game-scheduler/internal/repository"
 	"roleclub-website/game-scheduler/models"
+	"roleclub-website/game-scheduler/pkg/customerrors"
 
 	"github.com/jackc/pgerrcode"
 	"github.com/lib/pq"
@@ -41,12 +42,11 @@ func (gm *GameManagerRepository) AddGame(ctx context.Context, game *models.Game)
 		(*pq.StringArray)(&game.Roles), game.State.String(),
 	)
 
-	if pgErr, ok := err.(*pq.Error); ok && pgErr.Code == pgerrcode.UniqueViolation {
-		return fmt.Errorf("%s: %v", fn, repository.ErrGameAlreadyExists)
-	}
-
 	if err != nil {
-		return fmt.Errorf("%s: %v", fn, err)
+		if pgErr, ok := err.(*pq.Error); ok && pgErr.Code == pgerrcode.UniqueViolation {
+			err = customerrors.ErrGameAlreadyExists
+		}
+		return fmt.Errorf("%s: %w", fn, err)
 	}
 
 	return nil
@@ -77,17 +77,16 @@ func (gm *GameManagerRepository) GetGame(ctx context.Context, gamename string) (
 		gameState,
 	)
 
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, fmt.Errorf("%s: %v", fn, repository.ErrGameNotFound)
-	}
-
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", fn, err)
+		if errors.Is(err, sql.ErrNoRows) {
+			err = customerrors.ErrGameNotFound
+		}
+		return nil, fmt.Errorf("%s: %w", fn, err)
 	}
 
 	game.State, err = models.StringToGameState(gameState)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", fn, err)
+		return nil, fmt.Errorf("%s: %w", fn, err)
 	}
 
 	return game, nil
@@ -106,7 +105,7 @@ func (gm *GameManagerRepository) DeleteGame(ctx context.Context, gamename string
 	)
 
 	if err != nil {
-		return fmt.Errorf("%s: %v", fn, err)
+		return fmt.Errorf("%s: %w", fn, err)
 	}
 
 	return nil

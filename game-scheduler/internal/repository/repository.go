@@ -2,20 +2,11 @@ package repository
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
 
 	"roleclub-website/game-scheduler/models"
-)
-
-var (
-	ErrGameNotFound      = errors.New("game not found")
-	ErrGameAlreadyExists = errors.New("game already exists")
-	// ErrInvalidGameState  = errors.New("invalid game state")
-
-	ErrEventNotFound = errors.New("event not found")
 )
 
 const (

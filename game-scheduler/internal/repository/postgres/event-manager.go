@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"roleclub-website/game-scheduler/internal/repository"
 	"roleclub-website/game-scheduler/models"
+	"roleclub-website/game-scheduler/pkg/customerrors"
 
 	"github.com/google/uuid"
 )
@@ -37,7 +38,7 @@ func (em *EventManagerRepository) AddEvent(ctx context.Context, event *models.Ev
 	)
 
 	if err != nil {
-		return fmt.Errorf("%s: %v", fn, err)
+		return fmt.Errorf("%s: %w", fn, err)
 	}
 
 	return nil
@@ -64,12 +65,11 @@ func (em *EventManagerRepository) GetEvent(ctx context.Context, id uuid.UUID) (*
 		&event.IsSubscriptionOpen,
 	)
 
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, fmt.Errorf("%s: %v", fn, repository.ErrEventNotFound)
-	}
-
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", fn, err)
+		if errors.Is(err, sql.ErrNoRows) {
+			err = customerrors.ErrEventNotFound
+		}
+		return nil, fmt.Errorf("%s: %w", fn, err)
 	}
 
 	return event, nil
@@ -88,7 +88,7 @@ func (em *EventManagerRepository) DeleteEvent(ctx context.Context, id uuid.UUID)
 	)
 
 	if err != nil {
-		return fmt.Errorf("%s: %v", fn, err)
+		return fmt.Errorf("%s: %w", fn, err)
 	}
 
 	return nil
