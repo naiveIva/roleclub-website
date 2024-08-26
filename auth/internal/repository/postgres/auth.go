@@ -1,12 +1,12 @@
 package postgres
 
 import (
-	"auth/internal/repository"
 	"auth/models"
 	"database/sql"
 	"errors"
 	"fmt"
 
+	"auth/pkg/autherrors"
 	"auth/pkg/database"
 
 	"github.com/google/uuid"
@@ -35,18 +35,19 @@ func (auth *AuthRepository) CreateUser(user *models.User) error {
 		database.UsersTable,
 	))
 	if err != nil {
-		return fmt.Errorf("%s: %v", fn, err)
+		return fmt.Errorf("%s: %w", fn, err)
 	}
 	defer stmt.Close()
 
 	_, err = stmt.Exec(
 		uuid.New(), user.FirstName, user.LastName, user.FatherName,
 		user.TelNumber, user.Password, user.IsHSEStudent)
+
 	if err != nil {
 		if pgErr, ok := err.(*pq.Error); ok && pgErr.Code == pgerrcode.UniqueViolation {
-			return fmt.Errorf("%s: %v", fn, repository.ErrUserAlreadyExists)
+			err = autherrors.ErrUserAlreadyExists
 		}
-		return fmt.Errorf("%s: %v", fn, err)
+		return fmt.Errorf("%s: %w", fn, err)
 	}
 
 	return nil
@@ -61,7 +62,7 @@ func (auth *AuthRepository) GetUser(telNumber string) (*models.User, error) {
 		database.UsersTable,
 	))
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", fn, err)
+		return nil, fmt.Errorf("%s: %w", fn, err)
 	}
 	defer stmt.Close()
 
@@ -82,9 +83,9 @@ func (auth *AuthRepository) GetUser(telNumber string) (*models.User, error) {
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("%s: %v", fn, repository.ErrUserNotFound)
+			err = autherrors.ErrUserNotFound
 		}
-		return nil, fmt.Errorf("%s: %v", fn, err)
+		return nil, fmt.Errorf("%s: %w", fn, err)
 	}
 	return usr, nil
 }
@@ -97,7 +98,7 @@ func (auth *AuthRepository) GetUserByUUID(uuid uuid.UUID) (*models.User, error) 
 		database.UsersTable,
 	))
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", fn, err)
+		return nil, fmt.Errorf("%s: %w", fn, err)
 	}
 	defer stmt.Close()
 
@@ -118,9 +119,9 @@ func (auth *AuthRepository) GetUserByUUID(uuid uuid.UUID) (*models.User, error) 
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("%s: %v", fn, repository.ErrUserNotFound)
+			err = autherrors.ErrUserNotFound
 		}
-		return nil, fmt.Errorf("%s: %v", fn, err)
+		return nil, fmt.Errorf("%s: %w", fn, err)
 	}
 	return usr, nil
 }
@@ -134,13 +135,13 @@ func (auth *AuthRepository) IncrementPlayedGames(uuid uuid.UUID) error {
 		database.UsersTable,
 	))
 	if err != nil {
-		return fmt.Errorf("%s: %v", fn, err)
+		return fmt.Errorf("%s: %w", fn, err)
 	}
 	defer stmt.Close()
 
 	_, err = stmt.Exec(uuid)
 	if err != nil {
-		return fmt.Errorf("%s: %v", fn, err)
+		return fmt.Errorf("%s: %w", fn, err)
 	}
 
 	return nil
@@ -155,13 +156,13 @@ func (auth *AuthRepository) SetPlayedGames(numOfGames int, playerID int) error {
 		database.UsersTable,
 	))
 	if err != nil {
-		return fmt.Errorf("%s: %v", fn, err)
+		return fmt.Errorf("%s: %w", fn, err)
 	}
 	defer stmt.Close()
 
 	_, err = stmt.Exec(numOfGames, playerID)
 	if err != nil {
-		return fmt.Errorf("%s: %v", fn, err)
+		return fmt.Errorf("%s: %w", fn, err)
 	}
 
 	return nil
@@ -176,13 +177,13 @@ func (auth *AuthRepository) IncrementConductedGames(playerID int) error {
 		database.UsersTable,
 	))
 	if err != nil {
-		return fmt.Errorf("%s: %v", fn, err)
+		return fmt.Errorf("%s: %w", fn, err)
 	}
 	defer stmt.Close()
 
 	_, err = stmt.Exec(playerID)
 	if err != nil {
-		return fmt.Errorf("%s: %v", fn, err)
+		return fmt.Errorf("%s: %w", fn, err)
 	}
 
 	return nil
@@ -197,13 +198,13 @@ func (auth *AuthRepository) SetConductedGames(numOfGames int, playerID int) erro
 		database.UsersTable,
 	))
 	if err != nil {
-		return fmt.Errorf("%s: %v", fn, err)
+		return fmt.Errorf("%s: %w", fn, err)
 	}
 	defer stmt.Close()
 
 	_, err = stmt.Exec(numOfGames, playerID)
 	if err != nil {
-		return fmt.Errorf("%s: %v", fn, err)
+		return fmt.Errorf("%s: %w", fn, err)
 	}
 
 	return nil
@@ -215,7 +216,8 @@ func (auth *AuthRepository) SetStatus(status string, playerID int) error {
 	if status != database.PlayerStatus &&
 		status != database.MasterStatus &&
 		status != database.AdminStatus {
-		return fmt.Errorf("%s: %v", fn, repository.ErrInvalidPlayerStatus)
+		err := autherrors.ErrInvalidPlayerStatus
+		return fmt.Errorf("%s: %w", fn, err)
 	}
 
 	stmt, err := auth.db.Prepare(fmt.Sprintf(
@@ -224,13 +226,13 @@ func (auth *AuthRepository) SetStatus(status string, playerID int) error {
 		database.UsersTable,
 	))
 	if err != nil {
-		return fmt.Errorf("%s: %v", fn, err)
+		return fmt.Errorf("%s: %w", fn, err)
 	}
 	defer stmt.Close()
 
 	_, err = stmt.Exec(status, playerID)
 	if err != nil {
-		return fmt.Errorf("%s: %v", fn, err)
+		return fmt.Errorf("%s: %w", fn, err)
 	}
 
 	return nil

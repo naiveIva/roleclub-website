@@ -4,9 +4,9 @@ import (
 	"auth/internal/config"
 	"auth/internal/repository"
 	"auth/models"
+	"auth/pkg/autherrors"
 	"auth/pkg/logger"
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"time"
@@ -49,11 +49,7 @@ func (auth *AuthorizationService) RegisterUser(ctx context.Context, user *models
 	err = auth.repository.CreateUser(user)
 	if err != nil {
 		log.Error("failed to save user", logger.Error(err))
-		if errors.Is(err, repository.ErrUserAlreadyExists) {
-			err = ErrUserAlreadyExists
-			return fmt.Errorf("%s: %w", fn, err)
-		}
-		return err
+		return fmt.Errorf("%s: %w", fn, err)
 	}
 
 	log.Info("user created successfully")
@@ -84,14 +80,11 @@ func (auth *AuthorizationService) Login(ctx context.Context, telNumber, password
 	usr, err := auth.repository.GetUser(telNumber)
 	if err != nil {
 		log.Error("failed to find user", logger.Error(err))
-		if errors.Is(err, repository.ErrUserNotFound) {
-			return "", fmt.Errorf("%s: %w", fn, err)
-		}
-		return "", err
+		return "", fmt.Errorf("%s: %w", fn, err)
 	}
 
 	if !CheckPasswordHash(password, usr.Password) {
-		err = ErrorWrongPassword
+		err = autherrors.ErrWrongPassword
 		log.Error("password verification failed", logger.Error(err))
 		return "", fmt.Errorf("%s: %w", fn, err)
 	}

@@ -5,14 +5,7 @@ import (
 	"auth/internal/repository"
 	"auth/models"
 	"context"
-	"errors"
 	"log/slog"
-)
-
-var (
-	ErrUserNotFound        = errors.New("user not found")
-	ErrUserAlreadyExists   = errors.New("user already exists")
-	ErrorWrongPassword     = errors.New("wrong password")
 )
 
 type Authorization interface {

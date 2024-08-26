@@ -8,6 +8,7 @@ import (
 	api "auth/api/gen"
 	"auth/internal/service"
 	"auth/models"
+	"auth/pkg/autherrors"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -25,23 +26,16 @@ func NewGRPCServer(s *service.Service) *GRPCServer {
 }
 
 func (s *GRPCServer) CreateUser(ctx context.Context, req *api.CreateUserRequest) (*api.CreateUserResponse, error) {
-	if req.GetFirstName() == "" {
+	switch {
+	case req.GetFirstName() == "":
 		return nil, status.Error(codes.InvalidArgument, "first name is required")
-	}
-
-	if req.GetLastName() == "" {
+	case req.GetLastName() == "":
 		return nil, status.Error(codes.InvalidArgument, "last name is required")
-	}
-
-	if req.GetFatherName() == "" {
+	case req.GetFatherName() == "":
 		return nil, status.Error(codes.InvalidArgument, "father name is required")
-	}
-
-	if req.GetTelNumber() == "" {
+	case req.GetTelNumber() == "":
 		return nil, status.Error(codes.InvalidArgument, "telephone number is required")
-	}
-
-	if req.GetPassword() == "" {
+	case req.GetPassword() == "":
 		return nil, status.Error(codes.InvalidArgument, "password is required")
 	}
 
@@ -56,29 +50,27 @@ func (s *GRPCServer) CreateUser(ctx context.Context, req *api.CreateUserRequest)
 		},
 	)
 
-	if errors.Is(err, service.ErrUserAlreadyExists) {
+	if errors.Is(err, autherrors.ErrUserAlreadyExists) {
 		return nil, status.Error(codes.AlreadyExists, "user already exists")
 	}
 
 	return &api.CreateUserResponse{Ok: "all done"}, nil
 }
 
-
 func (s *GRPCServer) Login(ctx context.Context, req *api.LoginRequest) (*api.LoginResponse, error) {
-	if req.GetTelNumber() == "" {
+	switch {
+	case req.GetTelNumber() == "":
 		return nil, status.Error(codes.InvalidArgument, "telephone number is required")
-	}
-
-	if req.GetPassword() == "" {
+	case req.GetPassword() == "":
 		return nil, status.Error(codes.InvalidArgument, "password is required")
 	}
 
 	token, err := s.service.Login(ctx, req.GetTelNumber(), req.GetPassword())
 	if err != nil {
-		if errors.Is(err, service.ErrUserNotFound) {
+		if errors.Is(err, autherrors.ErrUserNotFound) {
 			return nil, status.Error(codes.NotFound, "user not found")
 		}
-		if errors.Is(err, service.ErrorWrongPassword) {
+		if errors.Is(err, autherrors.ErrWrongPassword) {
 			return nil, status.Error((codes.Unauthenticated), "wrong password")
 		}
 		return nil, err
